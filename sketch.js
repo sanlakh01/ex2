@@ -1,34 +1,35 @@
-let pHtmlMsg;
+let pHtmlMsg; //variable for on-screen messaging
 let serialOptions = { baudRate: 9600  };
-let serial;
+let serial; //variable to call the web serial functions
 
-let r = 0;
-let g = 0;
-let b = 0;
-let bright = 0;
+let r = 0; //red value for the RGB LED
+let g = 0; //green value for the RGB LED
+let b = 0; //blue value for the RGB LED
+let bright = 0; //"brightness ratio" factor, from the photoresistor
 
 function setup() {
-  createCanvas(windowWidth - 10, windowHeight -10);
+  createCanvas(windowWidth, windowHeight); //takes up the full width of the screen
+  
+  //taken directly from "UltraRipple" demo code
   pHtmlMsg = createP("Click anywhere on this page to open the serial connection dialog");
   serial = new Serial();
   serial.on(SerialEvents.CONNECTION_OPENED, onSerialConnectionOpened);
   serial.on(SerialEvents.CONNECTION_CLOSED, onSerialConnectionClosed);
   serial.on(SerialEvents.DATA_RECEIVED, onSerialDataReceived);
   serial.on(SerialEvents.ERROR_OCCURRED, onSerialErrorOccurred);
-
   serial.autoConnectAndOpenPreviouslyApprovedPort(serialOptions);
-
 }
 
 function draw() {
-  background(r,g,b);
+  background(r,g,b); //changes the page color to match the LED
 }
 
 function mouseClicked(){
-
+//called when mouse click is recorded
   if (!serial.isOpen()) {
     serial.connectAndOpen(null, serialOptions);
   }
+  //generates random values for r, g, b and modifies their "brightness" based on photoresistor input
   r = (int(random(0,256)))*bright/100;
   g = (int(random(0,256)))*bright/100;
   b = (int(random(0,256)))*bright/100;
@@ -36,9 +37,7 @@ function mouseClicked(){
   serialWriteLEDColor(r,g,b); // send the red, green, blue information to Arduino through serial
 }
 
-/**
- * Called automatically by the browser through p5.js when data sent to the serial
- */
+//following functions are taken from "UltraRipple" demo code and modified to fit this project
 async function serialWriteLEDColor(red, green, blue){
   if(serial.isOpen()){
     let strData = red + "," + green + "," + blue;
@@ -47,42 +46,21 @@ async function serialWriteLEDColor(red, green, blue){
   }
 }
 
-/**
- * Callback function by serial.js when there is an error on web serial
- * 
- * @param {} eventSender 
- */
 function onSerialErrorOccurred(eventSender, error) {
   console.log("onSerialErrorOccurred", error);
   pHtmlMsg.html(error);
 }
 
-/**
- * Callback function by serial.js when web serial connection is opened
- * 
- * @param {} eventSender 
- */
 function onSerialConnectionOpened(eventSender) {
   console.log("onSerialConnectionOpened");
   //pHtmlMsg.html("Serial connection opened successfully");
 }
 
-/**
- * Callback function by serial.js when web serial connection is closed
- * 
- * @param {} eventSender 
- */
 function onSerialConnectionClosed(eventSender) {
   console.log("onSerialConnectionClosed");
   pHtmlMsg.html("onSerialConnectionClosed");
 }
 
-/**
- * Callback function serial.js when new web serial data is received
- * 
- * @param {*} eventSender 
- * @param {String} newData new data received over serial
- */
 function onSerialDataReceived(eventSender, newData) {
   //console.log("onSerialDataReceived", newData);
   //pHtmlMsg.html("onSerialDataReceived: " + newData);
